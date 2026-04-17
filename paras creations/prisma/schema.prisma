@@ -1,0 +1,128 @@
+generator client { provider = "prisma-client-js" }
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role { ADMIN MANAGER STAFF }
+enum ProjectStatus { ONGOING COMPLETED ON_HOLD PLANNED }
+enum ProjectCategory { GOVERNMENT PRIVATE }
+enum EmploymentStatus { ACTIVE ON_LEAVE INACTIVE }
+enum InventoryTxnType { IN OUT RETURN DAMAGE }
+enum InquiryStatus { NEW IN_PROGRESS RESOLVED ARCHIVED }
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(STAFF)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  activity  ActivityLog[]
+}
+
+model Employee {
+  id               String           @id @default(cuid())
+  employeeCode     String           @unique
+  fullName         String
+  designation      String
+  department       String
+  mobile           String
+  email            String?
+  address          String?
+  aadhaar          String?
+  joinDate         DateTime
+  salary           Decimal?         @db.Decimal(12, 2)
+  status           EmploymentStatus @default(ACTIVE)
+  emergencyContact String?
+  photoUrl         String?
+  projectId        String?
+  project          Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model Project {
+  id            String          @id @default(cuid())
+  slug          String          @unique
+  name          String
+  category      ProjectCategory
+  clientName    String
+  location      String
+  description   String
+  startDate     DateTime
+  dueDate       DateTime
+  completedAt   DateTime?
+  budget        Decimal         @db.Decimal(14, 2)
+  status        ProjectStatus   @default(PLANNED)
+  progress      Int             @default(0)
+  coverImage    String?
+  gallery       String[]        @default([])
+  notes         String?
+  employees     Employee[]
+  transactions  InventoryTransaction[]
+  documents     Document[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model InventoryItem {
+  id            String   @id @default(cuid())
+  itemCode      String   @unique
+  name          String
+  category      String
+  unit          String
+  quantity      Int      @default(0)
+  reorderLevel  Int      @default(0)
+  supplier      String?
+  rate          Decimal? @db.Decimal(12, 2)
+  location      String?
+  notes         String?
+  transactions  InventoryTransaction[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model InventoryTransaction {
+  id          String            @id @default(cuid())
+  itemId      String
+  item        InventoryItem     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project?          @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  type        InventoryTxnType
+  quantity    Int
+  note        String?
+  createdAt   DateTime          @default(now())
+}
+
+model Document {
+  id         String   @id @default(cuid())
+  title      String
+  type       String
+  url        String
+  projectId  String?
+  project    Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdAt  DateTime @default(now())
+}
+
+model Inquiry {
+  id        String        @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  subject   String
+  message   String
+  status    InquiryStatus @default(NEW)
+  createdAt DateTime      @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  target    String?
+  createdAt DateTime @default(now())
+}
