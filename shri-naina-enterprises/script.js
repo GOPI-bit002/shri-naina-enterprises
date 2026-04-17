@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const body    = encodeURIComponent(
       `Name: ${name}\nPhone: ${phone}\n\nMessage:\n${message}`
     );
-    window.location.href = `mailto:shrinaina@gmail.com?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:eshrinaina@gmail.com?subject=${subject}&body=${body}`;
 
     note.textContent = 'Thank you! Opening your email to send the enquiry.';
     note.className = 'form-note success';
